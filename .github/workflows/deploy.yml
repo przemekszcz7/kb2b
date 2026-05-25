@@ -30,17 +30,48 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            **/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build application
-        run: npm run build
+      - name: Dynamic Install and Build
+        run: |
+          # 1. Detect target directory containing package.json (excluding node_modules)
+          TARGET_DIR="."
+          if [ -f "package.json" ]; then
+            TARGET_DIR="."
+          else
+            SUB_DIR=$(find . -name "package.json" | grep -v "node_modules" | head -n 1 | sed 's|/package.json||' | sed 's|^\./||')
+            if [ -n "$SUB_DIR" ] && [ "$SUB_DIR" != "." ]; then
+              TARGET_DIR="$SUB_DIR"
+            fi
+          fi
+          echo "====="
+          echo "Target directory detected: $TARGET_DIR"
+          echo "====="
+          
+          # 2. Open target directory
+          cd "$TARGET_DIR"
+          
+          # 3. Resilient dependency installation
+          if [ -f "package-lock.json" ]; then
+            npm ci || npm install
+          else
+            npm install
+          fi
+          
+          # 4. App compilation
+          npm run build
+          
+          # 5. Restructure build artifact for deployment
+          cd "$GITHUB_WORKSPACE"
+          mkdir -p dist_prod
+          cp -r "$TARGET_DIR/dist"/* ./dist_prod/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: './dist_prod'
 
       - name: Deploy to GitHub Pages
         id: deployment
