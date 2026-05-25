@@ -1,0 +1,6 @@
+{
+  "name": "KalkulatorB2B.pl",
+  "description": "Zaawansowany kalkulator kosztów zatrudnienia (UoP vs B2B vs umowa zlecenie) dla polskiego rynku na rok 2026.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
